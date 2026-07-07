@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        AmbTV MyList
 // @namespace        http://tampermonkey.net/
-// @version        0.2
+// @version        0.3
 // @description        AbemaTV マイリスト登録のコピーツール
 // @author        AbemaTV User
 // @match        https://abema.tv/*
@@ -169,26 +169,36 @@ function main(list_ul){
     button2.onclick=function(){
         links=[]; // 配列初期化
 
-        alert(
+        let ok=confirm(
             " 🔴 「AmbMyList(n).json」のファイルを読込んでください\n"+
             "　　(n)は同名ファイルがある場合の連番です");
-        button2_file.click(); }
+        if(ok){
+            button2_file.click(); }}
+
 
     button2_file.addEventListener("change", function(){
         if(!(button2_file.value)) return; // ファイルが選択されない場合
         let file_list=button2_file.files;
         if(!file_list) return; // ファイルリストが選択されない場合
         let file=file_list[0];
+
         if(!file) return; // ファイルが無い場合
+        else{
+            if(file.name.includes('AmbMyList')){ // AmbTV MyList のファイルのチェック
 
-        let file_reader=new FileReader();
-        file_reader.readAsText(file);
-        file_reader.onload=function(){
-            let data_in=JSON.parse(file_reader.result);
-            links=data_in; // 記録配列  links を上書き
-            let write_json=JSON.stringify(links);
+                let file_reader=new FileReader();
+                file_reader.readAsText(file);
+                file_reader.onload=function(){
+                    let data_in=JSON.parse(file_reader.result);
+                    links=data_in; // 記録配列  links を上書き
+                    let write_json=JSON.stringify(links);
 
-            list_disp(); }
+                    list_disp(); }}
+            else{ // 間違ったファイルを読み込んだ場合
+                alert(
+                    " 🔴 「AmbMyList(n).json」のファイルを読込んでください\n"+
+                    "　　(n)は同名ファイルがある場合の連番です"); }}
+
     });
 
 
@@ -299,11 +309,26 @@ function main(list_ul){
 
 
     function disp_now_count(){
+        let help_url='https://ameblo.jp/personwritep/entry-12971904361.html';
+
+        let help_svg=
+            '<svg width="20" height="20" style="vertical-align: -5px;" '+
+            'viewBox="0 0 200 200">'+
+            '<path style="fill: #3ca5da" d="M92 14C54 19 23 44 15 82C4 135 49 '+
+            '192 105 186C143 181 175 156 183 118C195 64 149 7 92 14z"></path>'+
+            '<path style="fill: #000" d="M63 69C70 67 76 64 82 61C92 58 116 58 110 '+
+            '76C103 96 81 101 81 125L112 125C112 111 123 105 132 96C141 85 1'+
+            '46 69 140 55C131 34 102 33 83 37C78 38 69 39 65 43C60 47 63 63 63 '+
+            '69M83 143L83 169L111 169L111 143L83 143z"></path></svg>';
+
         let disp_order=document.querySelector('.com-m-SelectMenuForDesktop');
         if(disp_order){
             let list_count=document.querySelectorAll('.com-pages-mylist-MylistContentItemList >li');
             let count_disp=
-                '<div class="count_d" style="color: #fff">現在の登録数：'+ list_count.length +'</div>';
+                '<div class="count_d" style="color: #fff">'+
+                '<a href="'+ help_url + '" rel="noopener noreferrer" target="_blank">'+ help_svg+
+                '</a>　現在の登録数：'+ list_count.length +
+                '</div>';
 
             if(document.querySelector('.count_d')){
                 document.querySelector('.count_d').remove(); }
