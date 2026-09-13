@@ -191,7 +191,6 @@ function main(list_ul){
                 file_reader.onload=function(){
                     let data_in=JSON.parse(file_reader.result);
                     links=data_in; // 記録配列  links を上書き
-                    let write_json=JSON.stringify(links);
 
                     list_disp(); }}
             else{ // 間違ったファイルを読み込んだ場合
