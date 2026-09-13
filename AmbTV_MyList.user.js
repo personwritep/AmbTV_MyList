@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        AmbTV MyList
 // @namespace        http://tampermonkey.net/
-// @version        0.3
+// @version        0.4
 // @description        AbemaTV マイリスト登録のコピーツール
 // @author        AbemaTV User
 // @match        https://abema.tv/*
@@ -49,16 +49,15 @@ function area_check(){
 
 function add_list(par, a_num){
     let retry1=0;
-    let interval1=setInterval(wait_target1, 50);
+    let interval1=setInterval(wait_target1, 300);
     function wait_target1(){
         retry1++;
-        if(retry1>80){ // リトライ制限 4secまで
+        if(retry1>6){ // リトライ制限 2sec以内 🔴🔴
             localStorage.setItem('AmbTV_MyList', a_num/1+1);
             clearInterval(interval1); }
         let B_button=
             document.querySelector('.com-shared-my-list-MyListBaseCircleButton__button');
         if(B_button){
-            clearInterval(interval1);
             add_action(B_button, par, a_num); }}
 
 
@@ -119,24 +118,68 @@ function add_list(par, a_num){
 
 
 
-function main(list_ul){
+function main(){
 
     disp_now_count();
 
+
+    let help_url='https://ameblo.jp/personwritep/entry-12971904361.html';
+
+    let help_svg=
+        '<svg width="20" height="20" style="vertical-align: -5px;" '+
+        'viewBox="0 0 200 200">'+
+        '<path style="fill: #3ca5da" d="M92 14C54 19 23 44 15 82C4 135 49 '+
+        '192 105 186C143 181 175 156 183 118C195 64 149 7 92 14z"></path>'+
+        '<path style="fill: #000" d="M63 69C70 67 76 64 82 61C92 58 116 58 110 '+
+        '76C103 96 81 101 81 125L112 125C112 111 123 105 132 96C141 85 1'+
+        '46 69 140 55C131 34 102 33 83 37C78 38 69 39 65 43C60 47 63 63 63 '+
+        '69M83 143L83 169L111 169L111 143L83 143z"></path></svg>';
+
+    let holder_svg=
+        '<svg viewBox="0 0 200 200">'+
+        '<path style="fill: #009688;" d="M33 31L32 32L30 33L29 33L28 33L'+
+        '27 35L27 35L26 36L25 37L24 38L23 39L21 41L22 43L21 43L19 45L19 47L19'+
+        ' 47L19 48L19 49L19 50L19 54L19 67L19 105L19 138L19 149L19 152L19 153'+
+        'L19 155L19 156L20 157L20 157L21 158L21 159L21 160L23 161L23 161L24 1'+
+        '62L25 163L27 165L29 164L30 165L30 166L32 167L34 167L36 167L37 167L38'+
+        ' 167L43 167L57 167L102 167L147 167L161 167L165 167L167 167L167 167L1'+
+        '68 167L169 167L171 167L173 165L173 164L175 165L176 164L177 163L179 1'+
+        '62L179 161L180 161L181 160L181 159L181 158L182 157L183 156L183 154L1'+
+        '83 154L183 153L183 152L183 151L183 148L183 136L183 101L183 72L183 62'+
+        'L183 59L183 58L183 56L183 55L181 53L180 53L181 51L179 49L178 48L177 '+
+        '47L177 47L176 45L174 46L173 46L173 45L171 43L170 43L168 43L167 44L16'+
+        '5 44L164 44L162 44L151 44L108 44L94 44L91 44L90 44L88 44L87 44L86 44'+
+        'L84 44L84 42L84 41L83 39L82 38L80 36L79 35L78 35L76 33L75 33L74 32L7'+
+        '2 31L70 31L68 31L67 31L63 31L52 31L42 31L39 31L37 31L37 31L36 31L35 '+
+        '31L33 31z"></path>'+
+        '</svg>';
+
     let panel=
-        '<div class="my_p">'+
-        '<button class="button1 com-shared-mypage-MypageSidebar__item">'+
+        '<div class="my_p2">'+
+        '<button class="button1 com-shared-mypage-MypageSidebar__item">'+ holder_svg +
         '登録をファイルに保存</button>'+
-        '<button class="button2 com-shared-mypage-MypageSidebar__item">'+
+        '<button class="button2 com-shared-mypage-MypageSidebar__item">'+ holder_svg +
         'ファイルから登録を読込む</button>'+
         '<input class="button2_file" type="file" style="display: none">'+
-        '<button class="button3 com-shared-mypage-MypageSidebar__item">'+
+        '<button class="button3 com-shared-mypage-MypageSidebar__item">'+ holder_svg +
         'マイリストを自動登録</button>'+
+        '<div class="counter">　現在の登録数：<span class="count_l"></span>　'+
+        '<a href="'+ help_url + '" rel="noopener noreferrer" target="_blank">'+ help_svg+
+        '</a></div>'+
+
+        '<style>'+
+        '.my_p2 { padding: 8px 0; margin: 24px 0; border-radius: 4px; outline: 1px solid #777; } '+
+        '.button2_file { display: none; }'+
+        '.button1, .button2, .button3 { '+
+        'height: 36px; margin: 4px 0; padding-right: 0; width: 100%; } '+
+        '.button1 svg, .button2 svg, .button3 svg { width: 28px; height: 20px; margin-left: -6px; } '+
+        '.counter { font-size: 16px; color: #fff; margin: 8px 0 8px 23px; } '+
+        '</style>'+
         '</div>';
 
     let sidebar=document.querySelector('.com-shared-mypage-MypageSidebar');
 
-    if(sidebar && !document.querySelector('.my_p')){
+    if(sidebar && !document.querySelector('.my_p2')){
         sidebar.insertAdjacentHTML('beforeend', panel); }
 
 
@@ -265,7 +308,7 @@ function main(list_ul){
                         if(link_id<localStorage.getItem('AmbTV_MyList')/1){ // 処理の終了をチェック
                             link_id=localStorage.getItem('AmbTV_MyList')/1;
                             open_roop(link_id); }
-                    }, 3000); } // 🔴🔴 処理スピードのパラメーター
+                    }, 2000); } // 🔴🔴 処理スピードのパラメーター
 
             } //open_roop(link_id)
 
@@ -279,7 +322,7 @@ function main(list_ul){
                     let open_q=link_url+ '?amtv_addlist=1&num='+ link_id;
                     list_color(link_url);
                     let newwin=window.open(open_q); }
-                else{ // スロット等の登録
+                else{ // スロット等の登録はパス
                     localStorage.setItem('AmbTV_MyList', link_id+1); }
 
             } // open_win()
@@ -307,34 +350,11 @@ function main(list_ul){
         let monitor1=new MutationObserver(disp_now_count);
         monitor1.observe(my_list, { childList: true }); }
 
-
     function disp_now_count(){
-        let help_url='https://ameblo.jp/personwritep/entry-12971904361.html';
-
-        let help_svg=
-            '<svg width="20" height="20" style="vertical-align: -5px;" '+
-            'viewBox="0 0 200 200">'+
-            '<path style="fill: #3ca5da" d="M92 14C54 19 23 44 15 82C4 135 49 '+
-            '192 105 186C143 181 175 156 183 118C195 64 149 7 92 14z"></path>'+
-            '<path style="fill: #000" d="M63 69C70 67 76 64 82 61C92 58 116 58 110 '+
-            '76C103 96 81 101 81 125L112 125C112 111 123 105 132 96C141 85 1'+
-            '46 69 140 55C131 34 102 33 83 37C78 38 69 39 65 43C60 47 63 63 63 '+
-            '69M83 143L83 169L111 169L111 143L83 143z"></path></svg>';
-
-        let disp_order=document.querySelector('.com-m-SelectMenuForDesktop');
-        if(disp_order){
-            let list_count=document.querySelectorAll('.com-pages-mylist-MylistContentItemList >li');
-            let count_disp=
-                '<div class="count_d" style="color: #fff">'+
-                '<a href="'+ help_url + '" rel="noopener noreferrer" target="_blank">'+ help_svg+
-                '</a>　現在の登録数：'+ list_count.length +
-                '</div>';
-
-            if(document.querySelector('.count_d')){
-                document.querySelector('.count_d').remove(); }
-            disp_order.insertAdjacentHTML('beforebegin', count_disp); }
-
+        let list_count=document.querySelectorAll('.com-pages-mylist-MylistContentItemList >li');
+        let count_l=document.querySelector('.my_p2 .count_l');
+        if(count_l){
+            count_l.textContent=list_count.length; }
     } // disp_now_count()
-
 
 } // main()
