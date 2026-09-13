@@ -119,11 +119,12 @@ function add_list(par, a_num){
 
 
 function main(){
-
-    disp_now_count();
-
-
     let help_url='https://ameblo.jp/personwritep/entry-12971904361.html';
+
+    setTimeout(()=>{
+        disp_now_count();
+    }, 400);
+
 
     let help_svg=
         '<svg width="20" height="20" style="vertical-align: -5px;" '+
