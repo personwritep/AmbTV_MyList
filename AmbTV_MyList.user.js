@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        AmbTV MyList
 // @namespace        http://tampermonkey.net/
-// @version        0.5
+// @version        0.4
 // @description        AbemaTV マイリスト登録のコピーツール
 // @author        AbemaTV User
 // @match        https://abema.tv/*
@@ -11,8 +11,7 @@
 // @downloadURL        https://github.com/personwritep/AmbTV_MyList/raw/main/AmbTV_MyList.user.js
 // ==/UserScript==
 
-
-let mylist=[]; // マイリスト登録のコピー用の配列
+let links=[]; // マイリスト登録のコピー用の配列
 
 
 let target0=document.querySelector('head > title');
@@ -110,6 +109,8 @@ function add_list(par, a_num){
 
             }, 400); }
 
+        window.opener
+
     } // add_action(button)
 
 } // add_list()
@@ -136,13 +137,22 @@ function main(){
         '69M83 143L83 169L111 169L111 143L83 143z"></path></svg>';
 
     let holder_svg=
-        '<svg viewBox="0 0 280 210">'+
-        '<path style="fill: #009688;" d="M46 13C35 16 26 25 25 36C24 48 '+
-        '25 62 25 74L25 147C25 160 22 178 31 189C42 202 66 197 82 197L184 197'+
-        'L216 197C222 197 228 198 234 196C244 194 250 187 252 177C254 168 253'+
-        ' 158 253 148L253 93C253 82 255 69 247 60C239 51 228 52 218 52L181 52'+
-        'C175 52 168 53 162 52C144 48 140 26 126 17C119 12 109 13 101 13L66 1'+
-        '3C59 13 52 12 46 13z"></path>'+
+        '<svg viewBox="0 0 200 200">'+
+        '<path style="fill: #009688;" d="M33 31L32 32L30 33L29 33L28 33L'+
+        '27 35L27 35L26 36L25 37L24 38L23 39L21 41L22 43L21 43L19 45L19 47L19'+
+        ' 47L19 48L19 49L19 50L19 54L19 67L19 105L19 138L19 149L19 152L19 153'+
+        'L19 155L19 156L20 157L20 157L21 158L21 159L21 160L23 161L23 161L24 1'+
+        '62L25 163L27 165L29 164L30 165L30 166L32 167L34 167L36 167L37 167L38'+
+        ' 167L43 167L57 167L102 167L147 167L161 167L165 167L167 167L167 167L1'+
+        '68 167L169 167L171 167L173 165L173 164L175 165L176 164L177 163L179 1'+
+        '62L179 161L180 161L181 160L181 159L181 158L182 157L183 156L183 154L1'+
+        '83 154L183 153L183 152L183 151L183 148L183 136L183 101L183 72L183 62'+
+        'L183 59L183 58L183 56L183 55L181 53L180 53L181 51L179 49L178 48L177 '+
+        '47L177 47L176 45L174 46L173 46L173 45L171 43L170 43L168 43L167 44L16'+
+        '5 44L164 44L162 44L151 44L108 44L94 44L91 44L90 44L88 44L87 44L86 44'+
+        'L84 44L84 42L84 41L83 39L82 38L80 36L79 35L78 35L76 33L75 33L74 32L7'+
+        '2 31L70 31L68 31L67 31L63 31L52 31L42 31L39 31L37 31L37 31L36 31L35 '+
+        '31L33 31z"></path>'+
         '</svg>';
 
     let panel=
@@ -159,26 +169,12 @@ function main(){
         '</a></div>'+
 
         '<style>'+
-        'nav.com-shared-mypage-MypageSidebar a { font-size: 18px !important; } '+
-        'nav a[href="/purchased/payperview"] { order: 1; } '+
-        'nav a[href="/viewing-history"] { order: 2; } '+
-        'nav a[href="/mylist"] { order: 3; } '+
-        '.my_p2 { order: 5; '+
-        'margin: 10px 0 20px; padding: 8px 0; border-radius: 4px; outline: 1px solid #777; } '+
+        '.my_p2 { padding: 8px 0; margin: 24px 0; border-radius: 4px; outline: 1px solid #777; } '+
         '.button2_file { display: none; }'+
         '.button1, .button2, .button3 { '+
         'height: 36px; margin: 4px 0; padding-right: 0; width: 100%; } '+
-        '.button1 svg, .button2 svg, .button3 svg { width: 28px; height: 16px; margin-left: -8px; } '+
+        '.button1 svg, .button2 svg, .button3 svg { width: 28px; height: 20px; margin-left: -6px; } '+
         '.counter { font-size: 16px; color: #fff; margin: 8px 0 8px 23px; } '+
-
-        '.com-a-ResponsiveMainContent { padding: 0 0 0 40px !important; height: calc(100vh - 68px); } '+
-        '.com-a-ResponsiveMainContent__inner { margin: 0; } '+
-        'h1.com-a-PageTitle { display: none; } '+
-        '.com-shared-mypage-MypageLayout__content { gap: 10px; } '+
-        '.com-shared-mypage-MypageLayout__main { margin: -48px 0 0; } '+
-        '.com-pages-mylist-MylistContentItemList { '+
-        'overflow-y: scroll; padding: 0 8px 0 2px; height: calc(100vh - 145px); } '+
-        '.c-application-FooterContainer { display: none; } '+
         '</style>'+
         '</div>';
 
@@ -195,54 +191,30 @@ function main(){
 
 
     button1.onclick=function(){
-        mylist=[]; // 配列初期化
+        links=[]; // 配列初期化
 
-        let list=document.querySelectorAll('.com-my-list-MyListBaseItem');
-        for(let k=0; k<list.length; k++){
-            let item_url='';
-            let link_a=list[k].querySelector('a');
-            if(link_a){
-                item_url=link_a.getAttribute('href'); }
-            let title_elem='';
-            let item_title='';
-            let ep_elem='';
-            let item_ep='';
-            title_elem=list[k].querySelector('.com-my-list-EpisodeListItem__series-title');
-            if(title_elem){ // エピソードリンクの場合
-                ep_elem=list[k].querySelector('.com-my-list-EpisodeListItem__title'); }
-            else{ // エピソードリンク以外の場合
-                title_elem=list[k].querySelector(
-                    '.com-my-list-SeriesListItem__title, '+
-                    '.com-my-list-SlotGroupListItem__title, '+
-                    '.com-my-list-SlotListItem__title'); }
+        let list_link=document.querySelectorAll('.com-my-list-MyListBaseItem > a');
+        for(let k=0; k<list_link.length; k++){
+            let link_href=list_link[k].href;
+            links.push(link_href); }
 
-            if(title_elem){
-                item_title=title_elem.textContent; }
-            if(ep_elem){
-                item_ep=ep_elem.textContent; }
 
-            mylist.push({
-                url: item_url,
-                title: item_title,
-                ep: item_ep
-            }); } // 配列にリストデータを入れる
-
-        let write_json=JSON.stringify(mylist); // 記録配列 mylist を書出す
+        let write_json=JSON.stringify(links); // 記録配列 links を書出す
         let blob=new Blob([write_json], {type: 'application/json'});
 
         let a_elem=document.createElement('a');
         a_elem.href=URL.createObjectURL(blob);
-        a_elem.download='Amb_MyList.json'; // 保存ファイル名
+        a_elem.download='AmbMyList.json'; // 保存ファイル名
         a_elem.click();
         URL.revokeObjectURL(a_elem.href); }
 
 
 
     button2.onclick=function(){
-        mylist=[]; // 配列初期化
+        links=[]; // 配列初期化
 
         let ok=confirm(
-            " 🔴 「Amb_MyList(n).json」のファイルを読込んでください\n"+
+            " 🔴 「AmbMyList(n).json」のファイルを読込んでください\n"+
             "　　(n)は同名ファイルがある場合の連番です");
         if(ok){
             button2_file.click(); }}
@@ -256,18 +228,18 @@ function main(){
 
         if(!file) return; // ファイルが無い場合
         else{
-            if(file.name.includes('Amb_MyList')){ // AmbTV MyList のファイルのチェック
+            if(file.name.includes('AmbMyList')){ // AmbTV MyList のファイルのチェック
 
                 let file_reader=new FileReader();
                 file_reader.readAsText(file);
                 file_reader.onload=function(){
                     let data_in=JSON.parse(file_reader.result);
-                    mylist=data_in; // 記録配列  mylist を上書き
+                    links=data_in; // 記録配列  links を上書き
 
                     list_disp(); }}
             else{ // 間違ったファイルを読み込んだ場合
                 alert(
-                    " 🔴 「Amb_MyList(n).json」のファイルを読込んでください\n"+
+                    " 🔴 「AmbMyList(n).json」のファイルを読込んでください\n"+
                     "　　(n)は同名ファイルがある場合の連番です"); }}
 
     });
@@ -278,31 +250,19 @@ function main(){
         let links_disp=
             '<div class="links_panel">';
 
-        for(let k=0; k<mylist.length; k++){
+        for(let k=0; k<links.length; k++){
             links_disp+=
-                '<a href="'+ mylist[k].url +'" target="_blank">'+
-                '<div class="num">'+ getdouble(k+1)+ '</div>'+
-                '<div class="titles">'+
-                '<div class="title">'+ mylist[k].title +'</div>'+
-                '<div class="ep">'+ mylist[k].ep +'</div></div></a>'; }
+                '<a href="'+ links[k] +'" target="_blank">'+getdouble(k+1)+
+                '　<span>'+ links[k] +'</span></a>'; }
 
         links_disp+=
             '<style>'+
-            '.links_panel { position: fixed; top: 125px; right: 10px; font: 16px/20px Meiryo; '+
-            'color: #fff; background: #000; border: 1px solid #00bcd4; '+
-            'padding: 5px; width: 385px; min-height: 50vh; max-height: calc(100vh - 145px); '+
-            'overflow-y: scroll; overflow-x: hidden; } '+
-            '.links_panel a { display: flex; flex-direction: row; align-items: center; '+
-            'margin: 1px 0; padding: 3px 4px 0; width: 360px; min-height: 43px; '+
-            'white-space: nowrap; text-decoration: none; } '+
+            '.links_panel { position: fixed; bottom: 20px; right: 10px; '+
+            'font: normal 16px/20px Meiryo; color: #fff; background: #000; border: 2px solid #fff; '+
+            'padding: 10px; width: 385px; height: 60vh; overflow-y: scroll; overflow-x: hidden; } '+
+            '.links_panel a { display: inline-block; padding: 8px 4px; width: 350px; '+
+            'overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-decoration: none; } '+
             '.links_panel a:hover { background: #444; } '+
-            '.links_panel a.active { outline: 1px solid #2196f3; outline-offset: -1px; } '+
-            '.links_panel a.done { box-shadow: inset 0 0 0 30px #0288d160; } '+
-            '.links_panel .num { font-size: 14px; color: #3ca5da; } '+
-            '.links_panel .titles { display: flex; flex-direction: column; margin: 0 8px; width: 320px; } '+
-            '.links_panel a.slot_group .titles { color: red; } '+
-            '.links_panel .title, .links_panel .ep { overflow: hidden; text-overflow: ellipsis; } '+
-            '.links_panel .ep { opacity: 0.8; } '+
             '</style></div>';
 
         if(document.querySelector('.links_panel')){
@@ -317,46 +277,38 @@ function main(){
         let lines=document.querySelectorAll('.links_panel a');
         for(let k=0; k<lines.length; k++){
             lines[k].onclick=function(){
-                lines[k].classList.toggle('active'); }
+                if(lines[k].hasAttribute('style')){
+                    lines[k].removeAttribute('style'); }
+                else{
+                    lines[k].style.outline='1px solid #2196f3'; }}}
 
-            lines[k].oncontextmenu=function(){
-                    lines[k].classList.toggle('active'); }}
 
         for(let k=0; k<lines.length; k++){
-            let lines_href=lines[k].getAttribute('href');
-            if(lines_href.includes('/slot-group')){
-                lines[k].classList.add('slot_group'); }}
+            let lines_span=lines[k].querySelector('span');
+            if(lines_span.textContent.includes('slot-group/')){
+                lines_span.style.color='red'; }}
 
     } // list_disp()
 
 
 
     button3.onclick=function(){
-        if(mylist.length>0){
+        if(links.length>0){
             list_color_clear();
 
             let link_id=0;
             open_roop(link_id);
 
             function open_roop(link_id){
-                if(link_id<mylist.length){
-                    let link_url=mylist[link_id].url;
-                    let not_pass=open_win(link_id, link_url);
+                if(link_id<links.length){
+                    let link_url=links[link_id];
+                    open_win(link_id, link_url);
 
-                    if(not_pass){
-                        setTimeout(()=>{
-                            if(link_id<localStorage.getItem('AmbTV_MyList')/1){ // 処理の終了をチェック
-                                link_id=localStorage.getItem('AmbTV_MyList')/1;
-                                open_roop(link_id); }
-                        }, 2000); } // 🔴🔴 処理スピードのパラメーター
-                    else{ // 対象urlがスロットグループの場合
-                        setTimeout(()=>{
-                            if(link_id<localStorage.getItem('AmbTV_MyList')/1){ // 処理の終了をチェック
-                                link_id=localStorage.getItem('AmbTV_MyList')/1;
-                                open_roop(link_id); }
-                        }, 200); }
-
-                    } // if(link_id<mylist.length)
+                    setTimeout(()=>{
+                        if(link_id<localStorage.getItem('AmbTV_MyList')/1){ // 処理の終了をチェック
+                            link_id=localStorage.getItem('AmbTV_MyList')/1;
+                            open_roop(link_id); }
+                    }, 2000); } // 🔴🔴 処理スピードのパラメーター
 
             } //open_roop(link_id)
 
@@ -365,41 +317,29 @@ function main(){
                 if(link_url.includes('video/title/')){ // シリーズ動画の登録
                     let open_q=link_url+ '?amtv_addlist=0&num='+ link_id;
                     list_color(link_url);
-                    let newwin=window.open(open_q);
-                    return true; }
-                else if(link_url.includes('video/episode') ||
-                        link_url.includes('/slots/')){ // 個別動画の登録
+                    let newwin=window.open(open_q); }
+                else if(link_url.includes('video/episode')){ // 個別動画の登録
                     let open_q=link_url+ '?amtv_addlist=1&num='+ link_id;
                     list_color(link_url);
-                    let newwin=window.open(open_q);
-                    return true; }
-                else{ // スロットグループの登録はパス
-                    localStorage.setItem('AmbTV_MyList', link_id+1);
-                    return false; } // パスの場合は falseを返す
+                    let newwin=window.open(open_q); }
+                else{ // スロット等の登録はパス
+                    localStorage.setItem('AmbTV_MyList', link_id+1); }
 
             } // open_win()
 
 
-       let lines=document.querySelectorAll('.links_panel a');
-        for(let k=0; k<lines.length; k++){
-            lines[k].onclick=function(){
-                lines[k].classList.toggle('active'); }
-
-            lines[k].oncontextmenu=function(){
-                    lines[k].classList.toggle('active'); }}
-
             function list_color(link_url){
-                let lines=document.querySelectorAll('.links_panel a');
-                for(let k=0; k<lines.length; k++){
-                    if(lines[k].getAttribute('href')==link_url){
-                        lines[k].classList.add('done'); }}}
+                let list_span=document.querySelectorAll('.links_panel a span');
+                for(let k=0; k<list_span.length; k++){
+                    if(list_span[k].textContent==link_url){
+                        list_span[k].style.background='#1069b3'; }}}
 
             function list_color_clear(){
-                let lines=document.querySelectorAll('.links_panel a');
-                for(let k=0; k<lines.length; k++){
-                       lines[k].classList.remove('dona'); }}
+                let list_span=document.querySelectorAll('.links_panel a span');
+                for(let k=0; k<list_span.length; k++){
+                    list_span[k].style.background=''; }}
 
-        } // if(mylist.length>0)
+        } // if(links.length>0)
 
     } // button3.onclick
 
