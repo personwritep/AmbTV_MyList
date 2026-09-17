@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        AmbTV MyList
 // @namespace        http://tampermonkey.net/
-// @version        0.5
+// @version        0.6
 // @description        AbemaTV マイリスト登録のコピーツール
 // @author        AbemaTV User
 // @match        https://abema.tv/*
@@ -20,7 +20,6 @@ let monitor0=new MutationObserver(area_check);
 monitor0.observe(target0, { childList: true });
 
 area_check();
-
 
 function area_check(){
     if(window.location.pathname=='/mylist'){
@@ -107,6 +106,10 @@ function add_list(par, a_num){
                         window.close(); }
 
                 } // if(BSL)
+                else{ //「slots」で「今回のみ追加」のボタンが disabledの場合
+                    localStorage.setItem('AmbTV_MyList', a_num/1+1);
+                    clearInterval(interval1);
+                } // windowを閉じないで残す
 
             }, 400); }
 
@@ -126,7 +129,7 @@ function main(){
 
 
     let help_svg=
-        '<svg width="20" height="20" style="vertical-align: -5px;" '+
+        '<svg width="20" height="20" style="vertical-align: -4px;" '+
         'viewBox="0 0 200 200">'+
         '<path style="fill: #3ca5da" d="M92 14C54 19 23 44 15 82C4 135 49 '+
         '192 105 186C143 181 175 156 183 118C195 64 149 7 92 14z"></path>'+
@@ -152,6 +155,9 @@ function main(){
         '<button class="button2 com-shared-mypage-MypageSidebar__item">'+ holder_svg +
         'ファイルから登録を読込む</button>'+
         '<input class="button2_file" type="file" style="display: none">'+
+        '<button class="lp_con">'+
+        '<span class="dispA">□ パネルを隠す</span>'+
+        '<span class="dispB">□ パネルを表示する</span></button>'+
         '<button class="button3 com-shared-mypage-MypageSidebar__item">'+ holder_svg +
         'マイリストを自動登録</button>'+
         '<div class="counter">　現在の登録数：<span class="count_l"></span>　'+
@@ -169,9 +175,13 @@ function main(){
         '.button1, .button2, .button3 { '+
         'height: 36px; margin: 4px 0; padding-right: 0; width: 100%; } '+
         '.button1 svg, .button2 svg, .button3 svg { width: 28px; height: 16px; margin-left: -8px; } '+
+        '.lp_con { font: 16px Meiryo; color: #00d2bf; margin-left: 38px; display: none; } '+
+        '.lp_con .dispA, .lp_con.hide .dispB { display: inline-block; width: 180px; text-align: left; } '+
+        '.lp_con.hide .dispA, .lp_con .dispB { display: none; } '+
         '.counter { font-size: 16px; color: #fff; margin: 8px 0 8px 23px; } '+
 
-        '.com-a-ResponsiveMainContent { padding: 0 0 0 40px !important; height: calc(100vh - 68px); } '+
+        '.com-a-ResponsiveMainContent { '+
+        'padding: 0 0 0 40px !important; height: calc(100vh - 68px); } '+
         '.com-a-ResponsiveMainContent__inner { margin: 0; } '+
         'h1.com-a-PageTitle { display: none; } '+
         '.com-shared-mypage-MypageLayout__content { gap: 10px; } '+
@@ -192,6 +202,7 @@ function main(){
     let button2=document.querySelector('.button2');
     let button2_file=document.querySelector('.button2_file');
     let button3=document.querySelector('.button3');
+
 
 
     button1.onclick=function(){
@@ -291,7 +302,7 @@ function main(){
             '.links_panel { position: fixed; top: 125px; right: 10px; font: 16px/20px Meiryo; '+
             'color: #fff; background: #000; border: 1px solid #00bcd4; '+
             'padding: 5px; width: 385px; min-height: 50vh; max-height: calc(100vh - 145px); '+
-            'overflow-y: scroll; overflow-x: hidden; } '+
+            'overflow-y: scroll; overflow-x: hidden; overscroll-behavior: contain; } '+
             '.links_panel a { display: flex; flex-direction: row; align-items: center; '+
             'margin: 1px 0; padding: 3px 4px 0; width: 360px; min-height: 43px; '+
             'white-space: nowrap; text-decoration: none; } '+
@@ -303,11 +314,14 @@ function main(){
             '.links_panel a.slot_group .titles { color: red; } '+
             '.links_panel .title, .links_panel .ep { overflow: hidden; text-overflow: ellipsis; } '+
             '.links_panel .ep { opacity: 0.8; } '+
+            '.links_panel.hide { display: none; } '+
             '</style></div>';
 
         if(document.querySelector('.links_panel')){
             document.querySelector('.links_panel').remove(); }
-        document.body.insertAdjacentHTML('beforeend', links_disp);
+        let main=document.querySelector('.c-application-DesktopAppContainer__main');
+        if(main){
+            main.insertAdjacentHTML('beforeend', links_disp); }
 
 
         function getdouble(number){
@@ -326,6 +340,16 @@ function main(){
             let lines_href=lines[k].getAttribute('href');
             if(lines_href.includes('/slot-group')){
                 lines[k].classList.add('slot_group'); }}
+
+
+        let links_panel=document.querySelector('.links_panel');
+        let lp_con=document.querySelector('.lp_con');
+        if(links_panel && lp_con){
+            lp_con.style.display='block';
+            lp_con.onclick=()=>{
+                lp_con.classList.toggle('hide');
+                let is_hide=lp_con.classList.contains('hide');
+                links_panel.classList.toggle('hide', is_hide); }} // 第2引数 true:クラス追加、false:削除
 
     } // list_disp()
 
@@ -402,7 +426,6 @@ function main(){
         } // if(mylist.length>0)
 
     } // button3.onclick
-
 
 
     let my_list=document.querySelector('.com-pages-mylist-MylistContentItemList');
