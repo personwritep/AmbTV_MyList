@@ -1,18 +1,19 @@
 // ==UserScript==
 // @name        AmbTV MyList
 // @namespace        http://tampermonkey.net/
-// @version        0.6
+// @version        0.7
 // @description        AbemaTV マイリスト登録のコピーツール
 // @author        AbemaTV User
 // @match        https://abema.tv/*
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=abema.tv
 // @grant        none
+// @run-at        document-idle
 // @updateURL        https://github.com/personwritep/AmbTV_MyList/raw/main/AmbTV_MyList.user.js
 // @downloadURL        https://github.com/personwritep/AmbTV_MyList/raw/main/AmbTV_MyList.user.js
 // ==/UserScript==
 
 
-let mylist=[]; // マイリスト登録のコピー用の配列
+let mylist=[]; // マイリスト登録のコピー用配列
 
 
 let target0=document.querySelector('head > title');
@@ -36,11 +37,15 @@ function area_check(){
                 main(); }}}
     else{
         if(window.location.search.includes('amtv_addlist')){
+            monitor0.disconnect();
             let urlParams=new URLSearchParams(window.location.search);
             let param=urlParams.get('amtv_addlist');
             let act_num=urlParams.get('num');
             if(param && act_num){
-                add_list(param, act_num); }}}
+                setTimeout(()=>{
+                    add_list(param, act_num);
+                }, 1200); // 読込み遅延に対処 🔴🔴
+            }}}
 
 } // list_check()
 
@@ -49,15 +54,16 @@ function area_check(){
 
 function add_list(par, a_num){
     let retry1=0;
-    let interval1=setInterval(wait_target1, 300);
+    let interval1=setInterval(wait_target1, 200);
     function wait_target1(){
         retry1++;
-        if(retry1>6){ // リトライ制限 2sec以内 🔴🔴
+        if(retry1>3){ // 制限 ページロード後 2secまで 🔴🔴
             localStorage.setItem('AmbTV_MyList', a_num/1+1);
             clearInterval(interval1); }
         let B_button=
             document.querySelector('.com-shared-my-list-MyListBaseCircleButton__button');
         if(B_button){
+            clearInterval(interval1);
             add_action(B_button, par, a_num); }}
 
 
@@ -70,15 +76,17 @@ function add_list(par, a_num){
                 setTimeout(()=>{
                     button_default=
                         button.querySelector('[class$="MyListBaseCircleButton__button-outline--default"]');
-                    if(!button_default){
-                        localStorage.setItem('AmbTV_MyList', a_num/1+1);
-                        window.close(); }
-                    else{
-                        localStorage.setItem('AmbTV_MyList', a_num/1+1); }
-                }, 200); }
-            else{ // 登録済み
-                localStorage.setItem('AmbTV_MyList', a_num/1+1);
-                window.close(); }}
+                    if(!button_default){ // 登録完了
+                        result(a_num, 1);
+                    }
+                    else{ // 登録失敗
+                        result(a_num, 0); }
+                }, 400); }
+            else{ // 登録済
+                result(a_num, 1);
+            }
+
+        } // if(par==0)
 
         else if(par==1){ // 個別動画の登録
             button.click();
@@ -93,25 +101,34 @@ function add_list(par, a_num){
                         setTimeout(()=>{
                             let button_default=
                                 button.querySelector('[class$="MyListBaseCircleButton__button-outline--default"]');
-                            if(!button_default){
-                                localStorage.setItem('AmbTV_MyList', a_num/1+1);
-                                window.close(); }
-                            else{
-                                localStorage.setItem('AmbTV_MyList', a_num/1+1); }
-                        }, 200);
+                            if(!button_default){ // 登録完了
+                                result(a_num, 1); }
+                            else{ // 登録失敗
+                                result(a_num, 0); }
+                        }, 400);
 
                     } // !is_added
                     else{ // 登録済み
-                        localStorage.setItem('AmbTV_MyList', a_num/1+1);
-                        window.close(); }
+                        result(a_num, 1); }
 
                 } // if(BSL)
-                else{ //「slots」で「今回のみ追加」のボタンが disabledの場合
-                    localStorage.setItem('AmbTV_MyList', a_num/1+1);
-                    clearInterval(interval1);
-                } // windowを閉じないで残す
+                else{ //「slots」で「今回のみ追加」ボタンが disabledの場合
+                    result(a_num, 0); }
 
-            }, 400); }
+            }, 400);
+
+        } // if(par==1)
+
+
+        function result(index, n){
+            if(n==1){ // 処理成功 ストレージで結果を伝達
+            }
+
+            localStorage.setItem('AmbTV_MyList', a_num/1+1);
+
+            setTimeout(()=>{
+                window.close();
+            }, 200); }
 
     } // add_action(button)
 
@@ -286,6 +303,7 @@ function main(){
 
 
     function list_disp(){
+
         let links_disp=
             '<div class="links_panel">';
 
@@ -334,7 +352,7 @@ function main(){
                 lines[k].classList.toggle('active'); }
 
             lines[k].oncontextmenu=function(){
-                    lines[k].classList.toggle('active'); }}
+                lines[k].classList.toggle('active'); }}
 
         for(let k=0; k<lines.length; k++){
             let lines_href=lines[k].getAttribute('href');
@@ -359,6 +377,8 @@ function main(){
         if(mylist.length>0){
             list_color_clear();
 
+            let storage_handle=null;
+
             let link_id=0;
             open_roop(link_id);
 
@@ -367,20 +387,26 @@ function main(){
                     let link_url=mylist[link_id].url;
                     let not_pass=open_win(link_id, link_url);
 
+                    if(storage_handle){
+                        window.removeEventListener('storage', storage_handle); }
+
                     if(not_pass){
-                        setTimeout(()=>{
-                            if(link_id<localStorage.getItem('AmbTV_MyList')/1){ // 処理の終了をチェック
-                                link_id=localStorage.getItem('AmbTV_MyList')/1;
-                                open_roop(link_id); }
-                        }, 2000); } // 🔴🔴 処理スピードのパラメーター
+                        storage_handle=(event)=>{
+                            if(event.key==='AmbTV_MyList' && event.newValue!==null){
+                                let newIndex=parseInt(event.newValue);
+                                if(newIndex>link_id && newIndex<=mylist.length){
+                                    window.removeEventListener('storage', storage_handle);
+                                    open_roop(newIndex); }}}
+
+                        window.addEventListener('storage', storage_handle); } // 🔴🔴 シーケンス処理
+
                     else{ // 対象urlがスロットグループの場合
                         setTimeout(()=>{
-                            if(link_id<localStorage.getItem('AmbTV_MyList')/1){ // 処理の終了をチェック
-                                link_id=localStorage.getItem('AmbTV_MyList')/1;
-                                open_roop(link_id); }
+                            localStorage.setItem('AmbTV_MyList', link_id+1);
+                            open_roop(link_id+1);
                         }, 200); }
 
-                    } // if(link_id<mylist.length)
+                } // if(link_id<mylist.length)
 
             } //open_roop(link_id)
 
@@ -398,18 +424,17 @@ function main(){
                     let newwin=window.open(open_q);
                     return true; }
                 else{ // スロットグループの登録はパス
-                    localStorage.setItem('AmbTV_MyList', link_id+1);
                     return false; } // パスの場合は falseを返す
 
             } // open_win()
 
 
-       let lines=document.querySelectorAll('.links_panel a');
-        for(let k=0; k<lines.length; k++){
-            lines[k].onclick=function(){
-                lines[k].classList.toggle('active'); }
+            let lines=document.querySelectorAll('.links_panel a');
+            for(let k=0; k<lines.length; k++){
+                lines[k].onclick=function(){
+                    lines[k].classList.toggle('active'); }
 
-            lines[k].oncontextmenu=function(){
+                lines[k].oncontextmenu=function(){
                     lines[k].classList.toggle('active'); }}
 
             function list_color(link_url){
@@ -421,7 +446,7 @@ function main(){
             function list_color_clear(){
                 let lines=document.querySelectorAll('.links_panel a');
                 for(let k=0; k<lines.length; k++){
-                       lines[k].classList.remove('dona'); }}
+                    lines[k].classList.remove('dona'); }}
 
         } // if(mylist.length>0)
 
