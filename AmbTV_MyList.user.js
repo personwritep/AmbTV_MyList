@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        AmbTV MyList
 // @namespace        http://tampermonkey.net/
-// @version        0.7
+// @version        0.8
 // @description        AbemaTV マイリスト登録のコピーツール
 // @author        AbemaTV User
 // @match        https://abema.tv/*
@@ -51,7 +51,6 @@ function area_check(){
 
 
 
-
 function add_list(par, a_num){
     let retry1=0;
     let interval1=setInterval(wait_target1, 200);
@@ -68,57 +67,126 @@ function add_list(par, a_num){
 
 
     function add_action(button, par, a_num){
-        if(par==0){ // シリーズ動画の登録
-            let button_default=
-                button.querySelector('[class$="MyListBaseCircleButton__button-outline--default"]');
-            if(button_default){ // 未登録
+        if(par==0){ // 動画シリーズの登録
+            if(b_default(button)){ // 未登録
                 button.click();
+
                 setTimeout(()=>{
-                    button_default=
-                        button.querySelector('[class$="MyListBaseCircleButton__button-outline--default"]');
-                    if(!button_default){ // 登録完了
-                        result(a_num, 1);
-                    }
+                    if(b_active(button)){ // 登録完了
+                        result(a_num, 1); }
                     else{ // 登録失敗
                         result(a_num, 0); }
                 }, 400); }
+
             else{ // 登録済
-                result(a_num, 1);
-            }
+                result(a_num, 1); }
 
-        } // if(par==0)
+        } // 動画シリーズの登録
 
-        else if(par==1){ // 個別動画の登録
+
+        else if(par==1){ // 動画エピソードの登録
             button.click();
+
             setTimeout(()=>{
-                let BSL=
-                    document.querySelectorAll('[class$="ButtonSelectListItem__container"]')[1];
-                if(BSL){
-                    let is_added=BSL.querySelector('[class$="Item__left-container--is-added"]');
-                    if(!is_added){ // 未登録
-                        BSL.click();
+                let BSL=document.querySelectorAll('[class$="ButtonSelectListItem__container"]');
+                if(BSL[1]){ // ボタンが2個ある場合
+                    if(!is_added(BSL[1])){ // 未登録
+                        BSL[1].click();
 
                         setTimeout(()=>{
-                            let button_default=
-                                button.querySelector('[class$="MyListBaseCircleButton__button-outline--default"]');
-                            if(!button_default){ // 登録完了
+                            if(b_active(button)){ // 登録完了
                                 result(a_num, 1); }
                             else{ // 登録失敗
                                 result(a_num, 0); }
-                        }, 400);
+                        }, 400); }
 
-                    } // !is_added
                     else{ // 登録済み
                         result(a_num, 1); }
 
-                } // if(BSL)
-                else{ //「slots」で「今回のみ追加」ボタンが disabledの場合
-                    result(a_num, 0); }
+                } // ボタンが2個ある場合
 
             }, 400);
 
-        } // if(par==1)
+        } // 動画エピソードの登録
 
+
+        else if(par==2){ // スロットエピソードの登録
+            if(b_default(button)){ // 最初は未登録
+                button.click();
+
+                setTimeout(()=>{
+                    if(b_active(button)){ // 小パネルが開かないタイプ 登録完了
+                        result(a_num, 1); }
+
+                    else{ // 小パネルが開くタイプ
+                        let BSL=document.querySelectorAll('[class$="ButtonSelectListItem__container"]');
+                        if(BSL[1]){ // ボタンが2個ある場合
+                            if(!is_added(BSL[1])){ // 未登録
+                                BSL[1].click();
+
+                                setTimeout(()=>{
+                                    if(b_active(button)){ // 登録完了
+                                        result(a_num, 1); }
+                                    else{ // 登録失敗
+                                        result(a_num, 0); }
+                                }, 400); }} // ボタンが2個ある場合
+
+                        else{ // ボタンが1個以下の場合は error 登録失敗
+                            result(a_num, 0); }
+
+                    } // 小パネルが開くタイプ
+
+                }, 400); } // 最初は未登録
+
+            else{ // 最初は登録済
+                button.click();
+
+                setTimeout(()=>{
+                    if(b_default(button)){ // 未登録に戻った場合　小パネルが開かないタイプ
+                        button.click();
+
+                        setTimeout(()=>{
+                            if(b_active(button)){ // 登録完了
+                                result(a_num, 1); }
+                        }, 400); }
+
+                    else{ // 小パネルが開くタイプ
+                        let BSL=document.querySelectorAll('[class$="ButtonSelectListItem__container"]');
+                        if(BSL[1]){ // ボタンが2個ある場合
+                            if(is_added(BSL[1])){ // BSL[1]が登録済
+                                result(a_num, 1); } // 登録完了
+
+                            else{ // BSL[1]が未登録
+                                BSL[1].click();
+
+                                setTimeout(()=>{
+                                    if(is_added(BSL[1])){ // BSL[1]の登録完了
+                                        result(a_num, 1); }
+                                    else{ // 登録失敗
+                                        result(a_num, 0); }
+                                }, 400); }} // ボタンが2個ある場合
+
+                        else{ // ボタンが1個以下の場合は error 登録失敗
+                            result(a_num, 0); }
+
+                    } // 小パネルが開くタイプ
+
+                }, 400); } // 最初は登録済
+
+        } // スロットエピソードの登録
+
+
+        function b_default(button){
+            if(button.querySelector('[class$="CircleButton__button-outline--default"]')){
+                return true; }} // 未登録
+
+        function b_active(button){
+            if(button.querySelector('[class$="CircleButton__button-outline--active"]')){
+                return true; }} // 登録完了
+
+        function is_added(p_button){
+            if(p_button.querySelector('[class$="Item__left-container--is-added"]')){
+                return true; }} // 登録完了
 
         function result(index, n){
             if(n==1){ // 処理成功 ストレージで結果を伝達
@@ -417,9 +485,13 @@ function main(){
                     list_color(link_url);
                     let newwin=window.open(open_q);
                     return true; }
-                else if(link_url.includes('video/episode') ||
-                        link_url.includes('/slots/')){ // 個別動画の登録
+                else if(link_url.includes('video/episode')){ // 個別動画の登録
                     let open_q=link_url+ '?amtv_addlist=1&num='+ link_id;
+                    list_color(link_url);
+                    let newwin=window.open(open_q);
+                    return true; }
+                else if(link_url.includes('/slots/')){ // スロットエピソードの登録
+                    let open_q=link_url+ '?amtv_addlist=2&num='+ link_id;
                     list_color(link_url);
                     let newwin=window.open(open_q);
                     return true; }
